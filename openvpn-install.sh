@@ -93,7 +93,7 @@ IP6=$(ip addr | grep -vE '::1\/' | sed -e's/^.*inet6 \([^ ]*\)\/.*$/\1/;t;d')
 
 if [[ "$IP6" != "" ]]; then
 	# IP=$(wget -qO- ipv4.icanhazip.com)
-	IP =$IP6
+	IP=$IP6
 fi
 
 if [[ "$IP" = "" ]]; then
@@ -228,8 +228,8 @@ else
 	echo ""
 	echo "What protocol do you want for OpenVPN?"
 	echo "Unless UDP is blocked, you should not use TCP (unnecessarily slower)"
-	while [[ $PROTOCOL != "UDP" && $PROTOCOL != "TCP" && $PROTOCOL != "TCP6" && $PROTOCOL != "udp6"]]; do
-		read -p "Protocol [UDP/TCP]: " -e -i UDP PROTOCOL
+	while [[ $PROTOCOL != "UDP" && $PROTOCOL != "UDP6"]]; do
+		read -p "Protocol [UDP/UDP6]: " -e -i UDP6 PROTOCOL
 	done
 	echo ""
 	echo "What DNS do you want to use with the VPN?"
