@@ -83,6 +83,19 @@ newclient () {
 # I do this to make the script compatible with NATed servers (LowEndSpirit/Scaleway)
 # and to avoid getting an IPv6.
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+# IP6=$(ip addr | grep 'inet6' | grep -vE '::1\/' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+
+IP6=$(ip addr | grep -vE '::1\/' | sed -e's/^.*inet6 \([^ ]*\)\/.*$/\1/;t;d')
+
+# if [[ "$IP6" = "" ]]; then
+# 	IP6=$(wget -qO- ipv6.icanhazip.com)
+# fi
+
+if [[ "$IP6" != "" ]]; then
+	# IP=$(wget -qO- ipv4.icanhazip.com)
+	IP =$IP6
+fi
+
 if [[ "$IP" = "" ]]; then
 	IP=$(wget -qO- ipv4.icanhazip.com)
 fi
@@ -215,7 +228,7 @@ else
 	echo ""
 	echo "What protocol do you want for OpenVPN?"
 	echo "Unless UDP is blocked, you should not use TCP (unnecessarily slower)"
-	while [[ $PROTOCOL != "UDP" && $PROTOCOL != "TCP" ]]; do
+	while [[ $PROTOCOL != "UDP" && $PROTOCOL != "TCP" && $PROTOCOL != "TCP6" && $PROTOCOL != "udp6"]]; do
 		read -p "Protocol [UDP/TCP]: " -e -i UDP PROTOCOL
 	done
 	echo ""
@@ -482,6 +495,10 @@ WantedBy=multi-user.target" > /etc/systemd/system/iptables.service
 		echo "proto udp" >> /etc/openvpn/server.conf
 	elif [[ "$PROTOCOL" = 'TCP' ]]; then
 		echo "proto tcp" >> /etc/openvpn/server.conf
+	elif [[ "$PROTOCOL" = 'UDP6' ]]; then
+		echo "proto udp6" >> /etc/openvpn/server.conf
+	elif [[ "$PROTOCOL" = 'TCP6' ]]; then
+		echo "proto tcp6" >> /etc/openvpn/server.conf
 	fi
 	echo "dev tun
 user nobody
@@ -654,10 +671,10 @@ verb 3" >> /etc/openvpn/server.conf
 	echo "client" > /etc/openvpn/client-template.txt
 	if [[ "$PROTOCOL" = 'UDP' ]]; then
 		echo "proto udp" >> /etc/openvpn/client-template.txt
-	elif [[ "$PROTOCOL" = 'TCP' ]]; then
+	elif [[ "$PROTOCOL" = 'UDP6' ]]; then
 		echo "proto tcp-client" >> /etc/openvpn/client-template.txt
 	fi
-	echo "remote $IP $PORT
+	echo "remote $IP6 $PORT
 dev tun
 resolv-retry infinite
 nobind
