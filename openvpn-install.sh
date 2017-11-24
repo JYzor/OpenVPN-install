@@ -85,7 +85,7 @@ newclient () {
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 # IP6=$(ip addr | grep 'inet6' | grep -vE '::1\/' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 
-IP6=$(ip addr | grep -vE '::1\/' | sed -e's/^.*inet6 \([^ ]*\)\/.*$/\1/;t;d')
+IP6=$(ip addr | grep -vE '::1\/' | sed -e's/^.*inet6 \([^ ]*\)\/.*$/\1/;t;d' | head -1)
 
 # if [[ "$IP6" = "" ]]; then
 # 	IP6=$(wget -qO- ipv6.icanhazip.com)
@@ -228,7 +228,7 @@ else
 	echo ""
 	echo "What protocol do you want for OpenVPN?"
 	echo "Unless UDP is blocked, you should not use TCP (unnecessarily slower)"
-	while [[ $PROTOCOL != "UDP" && $PROTOCOL != "UDP6"]]; do
+	while [[ $PROTOCOL != "UDP" && $PROTOCOL != "UDP6" ]]; do
 		read -p "Protocol [UDP/UDP6]: " -e -i UDP6 PROTOCOL
 	done
 	echo ""
@@ -654,27 +654,27 @@ verb 3" >> /etc/openvpn/server.conf
 		fi
 	fi
 	# Try to detect a NATed connection and ask about it to potential LowEndSpirit/Scaleway users
-	EXTERNALIP=$(wget -qO- ipv4.icanhazip.com)
-	if [[ "$IP" != "$EXTERNALIP" ]]; then
-		echo ""
-		echo "Looks like your server is behind a NAT!"
-		echo ""
-        echo "If your server is NATed (e.g. LowEndSpirit, Scaleway, or behind a router),"
-        echo "then I need to know the address that can be used to access it from outside."
-        echo "If that's not the case, just ignore this and leave the next field blank"
-        read -p "External IP or domain name: " -e USEREXTERNALIP
-		if [[ "$USEREXTERNALIP" != "" ]]; then
-			IP=$USEREXTERNALIP
-		fi
-	fi
+	# EXTERNALIP=$(wget -qO- ipv4.icanhazip.com)
+	# if [[ "$IP" != "$EXTERNALIP" ]]; then
+	# 	echo ""
+	# 	echo "Looks like your server is behind a NAT!"
+	# 	echo ""
+    #     echo "If your server is NATed (e.g. LowEndSpirit, Scaleway, or behind a router),"
+    #     echo "then I need to know the address that can be used to access it from outside."
+    #     echo "If that's not the case, just ignore this and leave the next field blank"
+    #     read -p "External IP or domain name: " -e USEREXTERNALIP
+	# 	if [[ "$USEREXTERNALIP" != "" ]]; then
+	# 		IP=$USEREXTERNALIP
+	# 	fi
+	# fi
 	# client-template.txt is created so we have a template to add further users later
 	echo "client" > /etc/openvpn/client-template.txt
 	if [[ "$PROTOCOL" = 'UDP' ]]; then
 		echo "proto udp" >> /etc/openvpn/client-template.txt
 	elif [[ "$PROTOCOL" = 'UDP6' ]]; then
-		echo "proto tcp-client" >> /etc/openvpn/client-template.txt
+		echo "proto udp6" >> /etc/openvpn/client-template.txt
 	fi
-	echo "remote $IP6 $PORT
+	echo "remote $IP $PORT
 dev tun
 resolv-retry infinite
 nobind
